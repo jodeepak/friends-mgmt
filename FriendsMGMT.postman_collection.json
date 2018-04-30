@@ -1,0 +1,131 @@
+{
+	"variables": [],
+	"info": {
+		"name": "FriendsMGMT",
+		"_postman_id": "ffb3b223-4014-4b09-4f2a-6e3d7613fcf1",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Add Friend",
+			"request": {
+				"url": "http://localhost/api/user/addFriend",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"friends\":\r\n    [\r\n      \"andy@example.com\",\r\n      \"john@example.com\"\r\n    ]\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Notify Users",
+			"request": {
+				"url": "http://localhost/api/user/notifyUsers",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"sender\":  \"john@example.com\",\r\n  \"text\": \"Hello World! kate@example.com\"\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Subscribe User",
+			"request": {
+				"url": "http://localhost/api/user/subscribeUser",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestor\": \"lisa@example.com\",\r\n  \"target\": \"john@example.com\"\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Block User",
+			"request": {
+				"url": "http://localhost/api/user/subscribeUser",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestor\": \"lisa@example.com\",\r\n  \"target\": \"john@example.com\"\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Common Friends",
+			"request": {
+				"url": "http://localhost/api/user/addFriend",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"friends\":\r\n    [\r\n      \"andy@example.com\",\r\n      \"john@example.com\"\r\n    ]\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Friend List",
+			"request": {
+				"url": "http://localhost/api/user/getFriends",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"john@example.com\"\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

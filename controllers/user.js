@@ -431,55 +431,64 @@ router.post('/notifyUsers',function(req,res){
             console.log(err);
             res.sendStatus(500);
         }else{
-            if(userA[0] != null){                     
-                orm.express(connString, {
-                    define: function (db, models) {   
-                        db.driver.execQuery(
-                            "SELECT requestor from subscribe where target = ? and requestor not in (select requestor from block_user where target = ?)",
-                            [userA[0].id, userA[0].id],
-                            function (err, data) { 
-                                console.log(data);
-                                var commons = []
-                                data.forEach(function(el){
-                                    commons.push(el.requestor)
+            var userList = []
+            if(userA[0] != null){     
+                //"SELECT requestor from subscribe where target = ? and requestor not in (select requestor from block_user where target = ?)",   
+                req.models.Subscribe.find({ target: userA[0].id}, function (err, users1) {  
+                    if (err) {
+                        console.log(err);
+                        res.sendStatus(500);
+                    }else{
+                        users1.forEach(function(el){
+                            userList.push(el.requestor)
+                        });
+                        //"SELECT * from friends where (user_id = ? or friend_id = ?) and user_id not in (select requestor from block_user where requestor = ? or target = ?) and friend_id not in (select requestor from block_user where requestor = ? or target = ?)",
+                        req.models.Friends.find({or:[{user_id: userA[0].id},{friend_id: userA[0].id}]}, function (err, users2) {  
+                            if (err) {
+                                console.log(err);
+                                res.sendStatus(500);
+                            }else{
+                                users2.forEach(function(el){
+                                    userList.push(el.user_id)
+                                    userList.push(el.friend_id)
                                 });
-                                orm.express(connString, {
-                                    define: function (db, models) {   
-                                        db.driver.execQuery(
-                                            "SELECT * from friends where (user_id = ? or friend_id = ?) and user_id not in (select requestor from block_user where requestor = ? or target = ?) and friend_id not in (select requestor from block_user where requestor = ? or target = ?)",
-                                            [userA[0].id, userA[0].id,userA[0].id, userA[0].id,userA[0].id, userA[0].id],
-                                            function (err, data) { 
-                                                console.log(data);
-                                                data.forEach(function(el){
-                                                    commons.push(el.friend_id)
-                                                    commons.push(el.user_id)
-                                                });
-                                                console.log(commons)
-                                                req.models.User.find({ id: commons}, function (err, users) {
-                                                    if (err) {
-                                                        console.log(err);
-                                                        res.sendStatus(500);
-                                                    }else{
-                                                        var notifyUsers = []
-                                                        users.forEach(function(el){
-                                                            if(el.email != body.sender){
+                                var mentionedUsers = extractEmails(body.text)
+                                //console.log(mentionedUsers)
+                                req.models.User.find({ email: mentionedUsers}, function (err, users3) {
+                                    if (err) {
+                                        console.log(err);
+                                        res.sendStatus(500);
+                                    }else{
+                                        users3.forEach(function(el){
+                                            userList.push(el.id)
+                                        });
+                                        //console.log(userList)
+                                        //select * from user where id in () and id not in (select requestor from block_user where target = 2)
+                                        orm.express(connString, {
+                                            define: function (db, models) {   
+                                                db.driver.execQuery(
+                                                    "SELECT * from user where id in ? and id not in (select requestor from block_user where target = ?)",
+                                                    [userList,userA[0].id],
+                                                    function (err, data) { 
+                                                        var notifyUsers = [];
+                                                        //console.log(data)
+                                                        data.forEach(function(el){
+                                                            if(el.email != body.sender)
                                                                 notifyUsers.push(el.email)
-                                                            }
-                                                        });
+                                                        });                                                        
                                                         jsonResp.success = true;
-                                                        jsonResp.recipients = notifyUsers;
+                                                        jsonResp.recipients = notifyUsers;  
                                                         res.send(JSON.stringify(jsonResp));
                                                     }
-                                                });
-
+                                                )
                                             }
-                                        )       
+                                        });
                                     }
                                 });
                             }
-                        )       
+                        });
                     }
-                });
+                }); 
             }else{
                 jsonResp.success = false;
                 jsonResp.info = "User '" + body.sender + "' does not exists";  
@@ -488,6 +497,10 @@ router.post('/notifyUsers',function(req,res){
         }
     });
 });
+
+function extractEmails ( text ){
+    return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+}
 
 
 module.exports = router
