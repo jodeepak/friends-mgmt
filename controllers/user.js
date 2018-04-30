@@ -1,6 +1,7 @@
 var express = require('express')
 var router = express.Router()  
 var orm = require('orm');
+var connString = 'mysql://testuser:p@ssw0rd@18.220.214.73/friendsmgmt'
 
 /**
 1. As a user, I need an API to create a friend connection between two email addresses.
@@ -153,6 +154,88 @@ router.post('/getFriends',function(req,res){
             }
         }
     });    
+});
+
+/**
+3. As a user, I need an API to retrieve the common friends list between two email addresses.
+POST Request http://localhost/api/user/getCommonFriends
+Request:
+{
+  friends:
+    [
+      'andy@example.com',
+      'john@example.com'
+    ]
+}
+Response Success: 
+{
+  "success": true,
+  "friends" :
+    [
+      'common@example.com'
+    ],
+  "count" : 1   
+}
+Response Failure:
+{"success":false,"info":"User not Found!"}
+*/
+router.post('/getCommonFriends',function(req,res){
+    const body = req.body;    
+    var jsonResp = {};
+    res.set('Content-Type', 'text/plain');
+    //console.log(body);
+    if(body.friends.length == 2){
+        req.models.User.find({ email: body.friends[0]},1, function (err, userA) {
+            if (err) {
+                console.log(err);
+                res.sendStatus(500);
+            }else{
+                if(userA[0] != null){
+                    req.models.User.find({ email: body.friends[1]},1, function (err, userB) {
+                        if (err) {
+                            console.log(err);
+                            res.sendStatus(500);
+                        }else{
+                            if(userB[0] != null){                         
+                                var db = orm.express(connString, {
+                                    define: function (db, models) {   
+                                        db.driver.execQuery(
+                                            "SELECT email FROM user where id in(SELECT user1.friend_id FROM friends AS user1 JOIN friends AS user2 USING (friend_id) WHERE user1.user_id = ? AND user2.user_id = ?);",
+                                            [userA[0].id, userB[0].id],
+                                            function (err, data) { 
+                                                console.log(data);
+                                                var commons = []
+                                                data.forEach(function(el){
+                                                    commons.push(el.email)
+                                                });
+                                                jsonResp.success = true;
+                                                jsonResp.friends = commons;
+                                                jsonResp.count = commons.length;
+                                                res.send(JSON.stringify(jsonResp));
+                                            }
+                                          )       
+                                    }
+                                });                                                        
+                            }else{
+                                jsonResp.success = false;
+                                jsonResp.info = "User '" + body.friends[1] + "' does not exists";
+                                res.send(JSON.stringify(jsonResp));
+                            }
+                        }
+                    });
+                }else{
+                    jsonResp.success = false;
+                    jsonResp.info = "User '" + body.friends[0] + "' does not exists";  
+                    res.send(JSON.stringify(jsonResp));
+                }
+            }
+        });
+        
+    }else{
+        jsonResp.success = false;
+        jsonResp.info = "Friends array in the request should be of length 2";    
+        res.send(JSON.stringify(jsonResp));
+    }
 });
 
 module.exports = router

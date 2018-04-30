@@ -81,3 +81,61 @@ describe('#GET Friends List API', function() {
             });
     });
 });
+
+describe('#GET Friends List API', function() {
+    it('checking positive request', function(done) {
+        chai.request(app)
+            .post('/api/user/getCommonFriends')
+            .send({
+                friends:
+                  [
+                    'andy@example.com',
+                    'john@example.com'
+                  ]
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, true);
+                assert.typeOf(resp.friends, 'array');
+                assert.lengthOf(resp.friends, resp.count);
+                done(); 
+            });
+    });
+    it('checking negative request', function(done) {
+        chai.request(app)
+            .post('/api/user/getCommonFriends')
+            .send({
+                friends:
+                  [
+                    'andy@example.com',
+                    'john1@example.com'
+                  ]
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, false);
+                done();
+            });
+    });
+    it('checking negative request', function(done) {
+        chai.request(app)
+            .post('/api/user/getCommonFriends')
+            .send({
+                friends:
+                  [
+                    'andy@example.com'
+                  ]
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, false);
+                done();
+            });
+    });
+});
