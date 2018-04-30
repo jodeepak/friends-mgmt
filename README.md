@@ -135,19 +135,5 @@ The API should return the following JSON response on success:
 }
 Please propose JSON responses for any errors that might occur.
 
-Constraints
-Time
-7 days from XXXX. Please feel free to submit your work any time, before the deadline.
 
-Please timebox yourself to a maximum of 12 hours for this activity.
-
-Technology
-You are required to use any of these languages: Go, Ruby, JavaScript, Java, PHP or Python.
-
-You are allowed to use any frameworks for the language you chose.
-
-Testing
-Please approach this exercise as you would in your day-to-day development workflow.
-
-If you write tests in your daily work, we would love to see them in this exercise too.
 
