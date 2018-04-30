@@ -43,7 +43,7 @@ router.post('/addFriend',function(req,res){
                                         res.sendStatus(500);
                                     }else{
                                         if (exists) {                                            
-                                            jsonResp.success = false;
+                                            jsonResp.success = true;
                                             jsonResp.info = "Already Friends";
                                             res.send(JSON.stringify(jsonResp));
                                         }else{
@@ -236,6 +236,81 @@ router.post('/getCommonFriends',function(req,res){
         jsonResp.info = "Friends array in the request should be of length 2";    
         res.send(JSON.stringify(jsonResp));
     }
+});
+
+/**
+4. As a user, I need an API to subscribe to updates from an email address.
+POST Request http://localhost/api/user/subscribeUser
+Request:
+{
+  "requestor": "lisa@example.com",
+  "target": "john@example.com"
+}
+
+Response Success: 
+{"success":true}
+Response Failure:
+{"success":false,"info":"User not Found!"}
+*/
+router.post('/subscribeUser',function(req,res){
+    const body = req.body;    
+    var jsonResp = {};
+    res.set('Content-Type', 'text/plain');
+    //console.log(body);
+    req.models.User.find({ email: body.requestor},1, function (err, userA) {
+        if (err) {
+            console.log(err);
+            res.sendStatus(500);
+        }else{
+            if(userA[0] != null){
+                req.models.User.find({ email: body.target},1, function (err, userB) {
+                    if (err) {
+                        console.log(err);
+                        res.sendStatus(500);
+                    }else{
+                        if(userB[0] != null){
+                            req.models.Subscribe.exists({requestor: userA[0].id,  target: userB[0].id}, function (err, exists) {
+                                if (err) {
+                                    console.log(err);
+                                    res.sendStatus(500);
+                                }else{
+                                    if (exists) {                                            
+                                        jsonResp.success = true;
+                                        jsonResp.info = "Already Subscribed";
+                                        res.send(JSON.stringify(jsonResp));
+                                    }else{
+                                        req.models.Subscribe.create([
+                                            {
+                                                requestor: userA[0].id,
+                                                target: userB[0].id       
+                                            }
+                                        ], function (err, items) {
+                                            if (err) {
+                                                console.log(err);
+                                                res.sendStatus(500);
+                                            }
+                                            jsonResp.success = true;
+                                            jsonResp.info = "Subscribed";
+                                            res.send(JSON.stringify(jsonResp));
+                                            }
+                                        );
+                                    }
+                                }
+                            });
+                        }else{
+                            jsonResp.success = false;
+                            jsonResp.info = "User '" + body.target + "' does not exists";
+                            res.send(JSON.stringify(jsonResp));
+                        }
+                    }
+                });
+            }else{
+                jsonResp.success = false;
+                jsonResp.info = "User '" + body.requestor + "' does not exists";  
+                res.send(JSON.stringify(jsonResp));
+            }
+        }
+    });        
 });
 
 module.exports = router

@@ -32,6 +32,10 @@ app.use(orm.express(connString, {
                 user_id: Number,
                 friend_id: Number,
             });
+            models.Subscribe = db.define("subscribe", {
+                requestor: Number,
+                target: Number,
+            });
         }
     })); 
 

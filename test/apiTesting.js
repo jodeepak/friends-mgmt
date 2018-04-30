@@ -25,7 +25,7 @@ describe('#Add Friend API', function() {
                 //console.log(JSON.stringify(res))
                 expect(res).to.have.status(200);
                 var resp = JSON.parse(res.text)
-                assert.equal(resp.success, false);
+                assert.equal(resp.success, true);
                 done(); 
             });
     });
@@ -82,7 +82,7 @@ describe('#GET Friends List API', function() {
     });
 });
 
-describe('#GET Friends List API', function() {
+describe('#GET Common Friends List API', function() {
     it('checking positive request', function(done) {
         chai.request(app)
             .post('/api/user/getCommonFriends')
@@ -129,6 +129,40 @@ describe('#GET Friends List API', function() {
                   [
                     'andy@example.com'
                   ]
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, false);
+                done();
+            });
+    });
+});
+
+
+describe('#Subscribe to User API', function() {
+    it('checking positive request', function(done) {
+        chai.request(app)
+            .post('/api/user/subscribeUser')
+            .send({
+                requestor: "andy@example.com",
+                target: "john@example.com"
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, true);
+                done(); 
+            });
+    });
+    it('checking negative request', function(done) {
+        chai.request(app)
+            .post('/api/user/subscribeUser')
+            .send({
+                requestor: "lisa@example.com",
+                target: "john@example.com"
               })
             .end(function(err, res) {
                 //console.log(JSON.stringify(res))
