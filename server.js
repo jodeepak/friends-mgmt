@@ -36,6 +36,10 @@ app.use(orm.express(connString, {
                 requestor: Number,
                 target: Number,
             });
+            models.BlockUser = db.define("block_user", {
+                requestor: Number,
+                target: Number,
+            });
         }
     })); 
 

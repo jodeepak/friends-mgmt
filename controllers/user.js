@@ -37,31 +37,44 @@ router.post('/addFriend',function(req,res){
                             res.sendStatus(500);
                         }else{
                             if(userB[0] != null){
-                                req.models.Friends.exists({or:[{user_id: userA[0].id,  friend_id: userB[0].id}, {user_id: userB[0].id,  friend_id: userA[0].id}]}, function (err, exists) {
+                                req.models.BlockUser.exists({or:[{requestor: userA[0].id,  target: userB[0].id}, {requestor: userB[0].id,  target: userA[0].id}]}, function (err, exists) {
                                     if (err) {
                                         console.log(err);
                                         res.sendStatus(500);
                                     }else{
-                                        if (exists) {                                            
-                                            jsonResp.success = true;
-                                            jsonResp.info = "Already Friends";
+                                        if (exists) {
+                                            jsonResp.success = false;
+                                            jsonResp.info = "Blocked User, cannot add as a friend";
                                             res.send(JSON.stringify(jsonResp));
                                         }else{
-                                            req.models.Friends.create([
-                                                {
-                                                    user_id: userA[0].id,
-                                                    friend_id: userB[0].id       
-                                                }
-                                            ], function (err, items) {
+                                            req.models.Friends.exists({or:[{user_id: userA[0].id,  friend_id: userB[0].id}, {user_id: userB[0].id,  friend_id: userA[0].id}]}, function (err, exists) {
                                                 if (err) {
                                                     console.log(err);
                                                     res.sendStatus(500);
+                                                }else{
+                                                    if (exists) {                                            
+                                                        jsonResp.success = true;
+                                                        jsonResp.info = "Already Friends";
+                                                        res.send(JSON.stringify(jsonResp));
+                                                    }else{
+                                                        req.models.Friends.create([
+                                                            {
+                                                                user_id: userA[0].id,
+                                                                friend_id: userB[0].id       
+                                                            }
+                                                        ], function (err, items) {
+                                                            if (err) {
+                                                                console.log(err);
+                                                                res.sendStatus(500);
+                                                            }
+                                                            jsonResp.success = true;
+                                                            jsonResp.info = "Added Friends";
+                                                            res.send(JSON.stringify(jsonResp));
+                                                            }
+                                                        );
+                                                    }
                                                 }
-                                                jsonResp.success = true;
-                                                jsonResp.info = "Added Friends";
-                                                res.send(JSON.stringify(jsonResp));
-                                                }
-                                            );
+                                            });
                                         }
                                     }
                                 });
@@ -312,5 +325,169 @@ router.post('/subscribeUser',function(req,res){
         }
     });        
 });
+
+/**
+5. As a user, I need an API to block updates from an email address.
+POST Request http://localhost/api/user/blockUser
+Request:
+{
+  "requestor": "andy@example.com",
+  "target": "john@example.com"
+}
+
+Response Success: 
+{"success":true}
+Response Failure:
+{"success":false,"info":"User not Found!"}
+*/
+router.post('/blockUser',function(req,res){
+    const body = req.body;    
+    var jsonResp = {};
+    res.set('Content-Type', 'text/plain');
+    //console.log(body);
+    req.models.User.find({ email: body.requestor},1, function (err, userA) {
+        if (err) {
+            console.log(err);
+            res.sendStatus(500);
+        }else{
+            if(userA[0] != null){
+                req.models.User.find({ email: body.target},1, function (err, userB) {
+                    if (err) {
+                        console.log(err);
+                        res.sendStatus(500);
+                    }else{
+                        if(userB[0] != null){
+                            req.models.BlockUser.exists({requestor: userA[0].id,  target: userB[0].id}, function (err, exists) {
+                                if (err) {
+                                    console.log(err);
+                                    res.sendStatus(500);
+                                }else{
+                                    if (exists) {                                            
+                                        jsonResp.success = true;
+                                        jsonResp.info = "Already Blocked";
+                                        res.send(JSON.stringify(jsonResp));
+                                    }else{
+                                        req.models.BlockUser.create([
+                                            {
+                                                requestor: userA[0].id,
+                                                target: userB[0].id       
+                                            }
+                                        ], function (err, items) {
+                                            if (err) {
+                                                console.log(err);
+                                                res.sendStatus(500);
+                                            }
+                                            jsonResp.success = true;
+                                            jsonResp.info = "User Blocked";
+                                            res.send(JSON.stringify(jsonResp));
+                                            }
+                                        );
+                                    }
+                                }
+                            });
+                        }else{
+                            jsonResp.success = false;
+                            jsonResp.info = "User '" + body.target + "' does not exists";
+                            res.send(JSON.stringify(jsonResp));
+                        }
+                    }
+                });
+            }else{
+                jsonResp.success = false;
+                jsonResp.info = "User '" + body.requestor + "' does not exists";  
+                res.send(JSON.stringify(jsonResp));
+            }
+        }
+    });        
+});
+
+/**
+6. As a user, I need an API to retrieve all email addresses that can receive updates from an email address.
+POST Request http://localhost/api/user/notifyUsers
+Request:
+{
+  "sender":  "john@example.com",
+  "text": "Hello World! kate@example.com"
+}
+Response Success: 
+{
+  "success": true
+  "recipients":
+    [
+      "lisa@example.com",
+      "kate@example.com"
+    ]
+}
+Response Failure:
+{"success":false,"info":"User not Found!"}
+*/
+router.post('/notifyUsers',function(req,res){
+    const body = req.body;    
+    var jsonResp = {};
+    res.set('Content-Type', 'text/plain');
+    //console.log(body);
+    req.models.User.find({ email: body.sender},1, function (err, userA) {
+        if (err) {
+            console.log(err);
+            res.sendStatus(500);
+        }else{
+            if(userA[0] != null){                     
+                orm.express(connString, {
+                    define: function (db, models) {   
+                        db.driver.execQuery(
+                            "SELECT requestor from subscribe where target = ? and requestor not in (select requestor from block_user where target = ?)",
+                            [userA[0].id, userA[0].id],
+                            function (err, data) { 
+                                console.log(data);
+                                var commons = []
+                                data.forEach(function(el){
+                                    commons.push(el.requestor)
+                                });
+                                orm.express(connString, {
+                                    define: function (db, models) {   
+                                        db.driver.execQuery(
+                                            "SELECT * from friends where (user_id = ? or friend_id = ?) and user_id not in (select requestor from block_user where requestor = ? or target = ?) and friend_id not in (select requestor from block_user where requestor = ? or target = ?)",
+                                            [userA[0].id, userA[0].id,userA[0].id, userA[0].id,userA[0].id, userA[0].id],
+                                            function (err, data) { 
+                                                console.log(data);
+                                                data.forEach(function(el){
+                                                    commons.push(el.friend_id)
+                                                    commons.push(el.user_id)
+                                                });
+                                                console.log(commons)
+                                                req.models.User.find({ id: commons}, function (err, users) {
+                                                    if (err) {
+                                                        console.log(err);
+                                                        res.sendStatus(500);
+                                                    }else{
+                                                        var notifyUsers = []
+                                                        users.forEach(function(el){
+                                                            if(el.email != body.sender){
+                                                                notifyUsers.push(el.email)
+                                                            }
+                                                        });
+                                                        jsonResp.success = true;
+                                                        jsonResp.recipients = notifyUsers;
+                                                        res.send(JSON.stringify(jsonResp));
+                                                    }
+                                                });
+
+                                            }
+                                        )       
+                                    }
+                                });
+                            }
+                        )       
+                    }
+                });
+            }else{
+                jsonResp.success = false;
+                jsonResp.info = "User '" + body.sender + "' does not exists";  
+                res.send(JSON.stringify(jsonResp));
+            }
+        }
+    });
+});
+
 
 module.exports = router

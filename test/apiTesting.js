@@ -11,7 +11,7 @@ var app = 'http://localhost'
 console.log('User API Testing');
 
 describe('#Add Friend API', function() {
-    it('checking positive request', function(done) {
+    it('checking positive request: adding as a friend', function(done) {
         chai.request(app)
             .post('/api/user/addFriend')
             .send({
@@ -29,7 +29,7 @@ describe('#Add Friend API', function() {
                 done(); 
             });
     });
-    it('checking negative request', function(done) {
+    it('checking negative request: unknow user', function(done) {
         chai.request(app)
             .post('/api/user/addFriend')
             .send({
@@ -45,6 +45,24 @@ describe('#Add Friend API', function() {
                 var resp = JSON.parse(res.text)
                 assert.equal(resp.success, false);
                 done();
+            });
+    });
+    it('checking blocked user', function(done) {
+        chai.request(app)
+            .post('/api/user/addFriend')
+            .send({
+                friends:
+                  [
+                    'lisa@example.com',
+                    'john@example.com'
+                  ]
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, false);
+                done(); 
             });
     });
 });
@@ -160,6 +178,39 @@ describe('#Subscribe to User API', function() {
     it('checking negative request', function(done) {
         chai.request(app)
             .post('/api/user/subscribeUser')
+            .send({
+                requestor: "lisa@example.com",
+                target: "john@example.com"
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, false);
+                done();
+            });
+    });
+});
+
+describe('#Block User API', function() {
+    it('checking positive request', function(done) {
+        chai.request(app)
+            .post('/api/user/blockUser')
+            .send({
+                requestor: "andy@example.com",
+                target: "john@example.com"
+              })
+            .end(function(err, res) {
+                //console.log(JSON.stringify(res))
+                expect(res).to.have.status(200);
+                var resp = JSON.parse(res.text)
+                assert.equal(resp.success, true);
+                done(); 
+            });
+    });
+    it('checking negative request', function(done) {
+        chai.request(app)
+            .post('/api/user/blockUser')
             .send({
                 requestor: "lisa@example.com",
                 target: "john@example.com"
