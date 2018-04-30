@@ -44,6 +44,7 @@ app.use(orm.express(connString, {
     })); 
 
 app.listen(PORT, function() {
+    console.log('Server Running in PORT=' + PORT)
 });
 
 app.use(require('./controllers'))
